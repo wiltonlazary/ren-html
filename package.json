@@ -1,0 +1,33 @@
+{
+  "name": "ren-html",
+  "version": "0.1.0",
+  "description": "Static rendering for ren-core: a view rendered once to HTML, after its tasks settle, with ren-dom's exact markup. No hydration.",
+  "type": "module",
+  "private": true,
+  "license": "UNLICENSED",
+  "sideEffects": false,
+  "engines": { "node": ">=22.15" },
+  "files": ["src", "types", "README.md"],
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": { "types": "./types/index.d.ts", "default": "./src/index.js" }
+  },
+  "scripts": {
+    "types": "node scripts/types.mjs",
+    "check": "tsc -p tsconfig.json",
+    "test": "node scripts/types.mjs && tsc -p tsconfig.json && tsc -p test/types/tsconfig.json && node --import ren-core/loader --test test/*.test.js test/*.test.jsx && node --import ren-core/compiled --test test/*.test.jsx",
+    "prepare": "node scripts/types.mjs",
+    "prepack": "node scripts/types.mjs"
+  },
+  "dependencies": {
+    "ren-core": "file:../../../ren-core/wtree/_repo_",
+    "ren-dom": "file:../../../ren-dom/wtree/_repo_"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "happy-dom": "20.14.5",
+    "parse5": "7.3.0",
+    "rrx-core": "file:../../../rrx-core/wtree/_repo_",
+    "typescript": "7.0.2"
+  }
+}

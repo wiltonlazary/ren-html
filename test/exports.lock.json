@@ -1,0 +1,7 @@
+{
+  ".": {
+    "$html": "function",
+    "Document": "class",
+    "serialize": "function"
+  }
+}
