@@ -9,6 +9,9 @@ const html = await $html(() => <App />, { id: 'home', props: { user }, theme: { 
 response.end(`<!doctype html><html><head><meta charset="utf-8"></head><body>${html}</body></html>`);
 ```
 
+The package is published on npm as `@maxenve/ren-html` under the MIT license;
+install it under its import name: `npm install ren-html@npm:@maxenve/ren-html`.
+
 The page must declare UTF-8 (a `<meta charset="utf-8">` or a
 `Content-Type: text/html; charset=utf-8` header): a browser guessing the
 encoding may read the markup otherwise. ESC is written as `&#x1B;` (as

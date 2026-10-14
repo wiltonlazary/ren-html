@@ -3,14 +3,30 @@
   "version": "0.1.0",
   "description": "Static rendering for ren-core: a view rendered once to HTML, after its tasks settle, with ren-dom's exact markup. No hydration.",
   "type": "module",
-  "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wiltonlazary/ren-html.git"
+  },
+  "homepage": "https://github.com/wiltonlazary/ren-html#readme",
+  "bugs": {
+    "url": "https://github.com/wiltonlazary/ren-html/issues"
+  },
   "sideEffects": false,
-  "engines": { "node": ">=22.15" },
-  "files": ["src", "types", "README.md"],
+  "engines": {
+    "node": ">=22.15"
+  },
+  "files": [
+    "src",
+    "types",
+    "README.md"
+  ],
   "types": "./types/index.d.ts",
   "exports": {
-    ".": { "types": "./types/index.d.ts", "default": "./src/index.js" }
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./src/index.js"
+    }
   },
   "scripts": {
     "types": "node scripts/types.mjs",
