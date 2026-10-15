@@ -1,6 +1,6 @@
 {
   "name": "ren-html",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Static rendering for ren-core: a view rendered once to HTML, after its tasks settle, with ren-dom's exact markup. No hydration.",
   "type": "module",
   "license": "MIT",
