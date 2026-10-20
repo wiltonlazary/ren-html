@@ -137,7 +137,8 @@ describe('ren-html', () => {
     const app = await $html(view, { styles: false });
     assert.ok(app.includes('user-select: none; -webkit-user-select: none; cursor: default; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;'), app);
     assert.ok(/<input data-ren="Edit" [^>]*user-select: text; -webkit-user-select: text; cursor: text;/.test(app), 'an Edit is selectable with the I-beam');
-    assert.ok(app.includes('user-select: text; -webkit-user-select: text; cursor: auto;'), "a style's select: 'text'");
+    // The I-beam, or the cursor of an element around it whose style set one (`--ren-cursor`).
+    assert.ok(app.includes('user-select: text; -webkit-user-select: text; cursor: var(--ren-cursor, auto);'), "a style's select: 'text'");
     const page = await $html(view, { styles: false, behavior: 'page' });
     assert.ok(!/<div data-ren-root="page" [^>]*user-select/.test(page) && !page.includes('cursor: default') && !page.includes('touch-callout'), page);
     const select = await $html(view, { styles: false, behavior: { like: 'app', select: true } });
