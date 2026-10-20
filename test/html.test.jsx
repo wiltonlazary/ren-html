@@ -44,6 +44,14 @@ function Page() {
 }
 
 /**
+ * ren-html's markup less the inline prefixed declarations happy-dom's CSSOM
+ * drops (a browser drops those it does not know; Safari knows all three),
+ * which an application root's host element and an Edit write.
+ * @param {string} html
+ */
+const known = html => html.replace(/ style="[^"]*"/g, style => style.replace(/ ?-webkit-(?:user-select|touch-callout|tap-highlight-color): [^;"]*;/g, ''));
+
+/**
  * The same view in ren-dom on happy-dom, once settled: the host element's
  * HTML. The window closes after the test, so a failure midway still frees it;
  * node:test keeps every hook to the end of the run, so the hook holds the
@@ -77,7 +85,7 @@ describe('ren-html', () => {
     assert.ok(html.includes('theme dark'));
     assert.ok(html.startsWith('<div data-ren-root="page"'), 'the root element with its id');
     assert.ok(html.includes('<style data-ren-style="page">'), 'the primitives\' scoped styles');
-    assert.equal(html, await inBrowser(t, options), 'the same markup as ren-dom in a browser document');
+    assert.equal(known(html), await inBrowser(t, options), 'the same markup as ren-dom in a browser document');
   });
 
   it('writes styles, null props and boolean aria as ren-dom does: px but for unitless and prefixed keys, no attribute for null, "false"', async () => {
@@ -107,7 +115,7 @@ describe('ren-html', () => {
     );
     const html = await $html(view);
     assert.ok(html.includes('data-ren-state='), 'the state classes are in the markup');
-    assert.equal(html, await inBrowser(t, {}, view));
+    assert.equal(known(html), await inBrowser(t, {}, view));
   });
 
   it('renders a view that listens for keys and scrolls, as ren-dom does', async (/** @type {import('node:test').TestContext} */ t) => {
@@ -116,7 +124,24 @@ describe('ren-html', () => {
       $scrolls(() => {});
       return <Label text="k" />;
     };
-    assert.equal(await $html(view), await inBrowser(t, {}, view));
+    assert.equal(known(await $html(view)), await inBrowser(t, {}, view));
+  });
+
+  it("writes an application's behavior, prefixed for Safari too, and a page's none, as ren-dom's behavior option", async () => {
+    const view = () => (
+      <View>
+        <Edit label="q" />
+        <Label text="opted" style={{ select: 'text' }} />
+      </View>
+    );
+    const app = await $html(view, { styles: false });
+    assert.ok(app.includes('user-select: none; -webkit-user-select: none; cursor: default; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;'), app);
+    assert.ok(/<input data-ren="Edit" [^>]*user-select: text; -webkit-user-select: text; cursor: text;/.test(app), 'an Edit is selectable with the I-beam');
+    assert.ok(app.includes('user-select: text; -webkit-user-select: text; cursor: auto;'), "a style's select: 'text'");
+    const page = await $html(view, { styles: false, behavior: 'page' });
+    assert.ok(!/<div data-ren-root="page" [^>]*user-select/.test(page) && !page.includes('cursor: default') && !page.includes('touch-callout'), page);
+    const select = await $html(view, { styles: false, behavior: { like: 'app', select: true } });
+    assert.ok(!/<div data-ren-root="page" [^>]*user-select/.test(select) && select.includes('cursor: default;'), 'one switch on its own');
   });
 
   // A browser keeps these as properties, out of its markup; a static page
@@ -137,7 +162,7 @@ describe('ren-html', () => {
     const html = await $html(view);
     assert.ok(/<div data-ren="View" [^>]*tabindex="-1"/.test(html), html);
     assert.equal((html.match(/ inert=""/g) ?? []).length, 1, 'inert only while true');
-    assert.equal(html, await inBrowser(t, {}, view), 'the same markup as ren-dom in a browser document');
+    assert.equal(known(html), await inBrowser(t, {}, view), 'the same markup as ren-dom in a browser document');
   });
 
   it("writes a primitive's dir as ren-dom does in a browser", async (/** @type {import('node:test').TestContext} */ t) => {
@@ -152,7 +177,7 @@ describe('ren-html', () => {
     assert.ok(/<div data-ren="View" [^>]*dir="rtl"/.test(html), html);
     assert.ok(/<input [^>]*dir="auto"/.test(html), html);
     assert.equal((html.match(/ dir="/g) ?? []).length, 2, 'written where given, inherited below');
-    assert.equal(html, await inBrowser(t, {}, view), 'the same markup as ren-dom in a browser document');
+    assert.equal(known(html), await inBrowser(t, {}, view), 'the same markup as ren-dom in a browser document');
   });
 
   it('keeps form values and flags in the markup', async () => {
@@ -253,7 +278,7 @@ describe('ren-html', () => {
     };
     for (const [what, style] of Object.entries(same)) {
       const view = () => <p style={style}>x</p>;
-      assert.equal(await $html(view), await inBrowser(t, {}, view), what);
+      assert.equal(known(await $html(view)), await inBrowser(t, {}, view), what);
     }
     // A name that only ends in url (rurl(, #url(, @url() is a block to a browser, so a bracket in it is no url's;
     // escaped, it is the same name (#u\rl(, #u\72 l(), and its ';' is a block's.
@@ -455,7 +480,7 @@ describe('ren-html', () => {
     for (const [name, view] of Object.entries(same)) {
       const html = await $html(view);
       assert.ok(!html.includes('alert(1)'), `${name}: ${html.slice(-80)}`);
-      assert.equal(html, await inBrowser(t, {}, view), name);
+      assert.equal(known(html), await inBrowser(t, {}, view), name);
     }
     // happy-dom lacks body's WindowEventHandlers; a browser writes none.
     const body = await $html(() => <body onload="alert(1)" onhashchange="alert(1)" class="k" />, { styles: false });
@@ -555,7 +580,7 @@ describe('ren-html', () => {
     const view = () => <p>{'x\u00a0y'}</p>;
     const html = await $html(view);
     assert.match(html, /<p>x&nbsp;y<\/p>/);
-    assert.equal(html, await inBrowser(t, {}, view), 'the same markup as ren-dom in a browser document');
+    assert.equal(known(html), await inBrowser(t, {}, view), 'the same markup as ren-dom in a browser document');
     // happy-dom leaves it raw in an attribute; browsers and the HTML
     // serialization algorithm write &nbsp; there too.
     assert.match(await $html(() => <p title={'a\u00a0b'}>x</p>, { styles: false }), /<p title="a&nbsp;b">x<\/p>/);
@@ -661,7 +686,7 @@ describe('ren-html', () => {
       </div>
     );
     const html = await $html(view);
-    assert.equal(html, await inBrowser(t, {}, view), 'the markup ren-dom makes in a browser');
+    assert.equal(known(html), await inBrowser(t, {}, view), 'the markup ren-dom makes in a browser');
     assert.ok(html.includes(`<p data-${K}ey="1">x</p><lin${K} rel="stylesheet" href="/x.css"></lin${K}>`), html);
     const page = parse(`<!doctype html><body>${html}`);
     const names = [];
@@ -684,7 +709,7 @@ describe('ren-html', () => {
       'a scrollTop': () => <Div scrollTop={10} scrollLeft={4} />,
       'a volume': () => <Video volume={0.5} currentTime={3} />,
     };
-    for (const [what, view] of Object.entries(same)) assert.equal(await $html(view), await inBrowser(t, {}, view), what);
+    for (const [what, view] of Object.entries(same)) assert.equal(known(await $html(view)), await inBrowser(t, {}, view), what);
     // happy-dom writes no text for an output's defaultValue, which a browser's sets (with no value set
     // over it). (A media element's muted is a flag, on purpose: see its own test.)
     const rate = await $html(() => <Video playbackRate={2} />, { styles: false });
@@ -718,7 +743,7 @@ describe('ren-html', () => {
       'a div\'s value': () => <Div value={true} />,
       'an input\'s own': () => <input disabled="" checked={false} type="checkbox" />,
     };
-    for (const [what, view] of Object.entries(views)) assert.equal(await $html(view), await inBrowser(t, {}, view), what);
+    for (const [what, view] of Object.entries(views)) assert.equal(known(await $html(view)), await inBrowser(t, {}, view), what);
   });
 
   it('writes an empty control for a null or undefined value, as ren-dom leaves it', async (/** @type {import('node:test').TestContext} */ t) => {
@@ -732,7 +757,7 @@ describe('ren-html', () => {
     );
     const html = await $html(view);
     assert.ok(html.includes('<form><input><textarea></textarea><output></output><select><option>a</option><option>b</option></select></form>'), html.slice(html.indexOf('<form')));
-    assert.equal(html, await inBrowser(t, {}, view));
+    assert.equal(known(html), await inBrowser(t, {}, view));
   });
 
   it('reads the boolean properties a browser has as flags, on the elements that own them', async (/** @type {import('node:test').TestContext} */ t) => {
@@ -753,7 +778,7 @@ describe('ren-html', () => {
       style: () => <Style disabled={true}>{'a{}'}</Style>,
       'a type': () => <a {...{ type: true }}>x</a>,
     };
-    for (const [what, view] of Object.entries(views)) assert.equal(await $html(view), await inBrowser(t, {}, view), what);
+    for (const [what, view] of Object.entries(views)) assert.equal(known(await $html(view)), await inBrowser(t, {}, view), what);
     // happy-dom has no playsInline or allowFullscreen; a browser's are flags.
     assert.ok((await $html(() => <Video playsInline={1} />, { styles: false })).includes('<video playsinline=""></video>'));
     assert.ok((await $html(() => <iframe {...{ allowFullscreen: 1 }} />, { styles: false })).includes('<iframe allowfullscreen=""></iframe>'));
@@ -761,7 +786,7 @@ describe('ren-html', () => {
 
   it('writes a video\'s muted as a flag, as checked is, so a static page still autoplays muted', async (/** @type {import('node:test').TestContext} */ t) => {
     const Video = /** @type {any} */ ('video');
-    for (const view of [() => <Video autoplay muted loop />, () => <Video {...{ defaultMuted: true }} />, () => <audio {...{ muted: false }} />]) assert.equal(await $html(view), await inBrowser(t, {}, view));
+    for (const view of [() => <Video autoplay muted loop />, () => <Video {...{ defaultMuted: true }} />, () => <audio {...{ muted: false }} />]) assert.equal(known(await $html(view)), await inBrowser(t, {}, view));
     assert.ok((await $html(() => <Video autoplay muted />, { styles: false })).includes('<video autoplay="" muted=""></video>'));
   });
 
@@ -784,7 +809,7 @@ describe('ren-html', () => {
     );
     const html = await $html(view);
     assert.ok(html.includes('<option value="">Pick</option>') && html.includes('<input type="text">') && html.includes('<li value="0">'), html.slice(html.indexOf('<form')));
-    assert.equal(html, await inBrowser(t, {}, view));
+    assert.equal(known(html), await inBrowser(t, {}, view));
   });
 
   it('writes a negative progress value as 0, as Chrome\'s setter does, and a meter\'s as given', async () => {
@@ -1090,7 +1115,7 @@ describe('ren-html', () => {
     const view = () => <form><output name="sum" value="42" /></form>;
     const html = await $html(view);
     assert.ok(html.includes('<output name="sum">42</output>'), html);
-    assert.equal(html, await inBrowser(t, {}, view));
+    assert.equal(known(html), await inBrowser(t, {}, view));
   });
 
   it('writes camelCase props under their HTML attribute names, as ren-dom does in a browser', async (/** @type {import('node:test').TestContext} */ t) => {
@@ -1106,7 +1131,7 @@ describe('ren-html', () => {
       httpEquiv: () => <meta httpEquiv="refresh" content="5" />,
       svg: () => <svg viewBox="0 0 1 1"><path stroke-width="2" /></svg>,
     };
-    for (const [name, view] of Object.entries(same)) assert.equal(await $html(view), await inBrowser(t, {}, view), name);
+    for (const [name, view] of Object.entries(same)) assert.equal(known(await $html(view)), await inBrowser(t, {}, view), name);
     // An SVG attribute the parser would read back lowercased (strokeWidth as
     // strokewidth) is not written: ren-dom's browser markup keeps it, inert.
     assert.ok((await $html(() => <svg viewBox="0 0 1 1"><path strokeWidth="2" /></svg>)).includes('<svg viewBox="0 0 1 1"><path></path></svg>'));
@@ -1133,7 +1158,7 @@ describe('ren-html', () => {
       defaultChecked: () => <input type="checkbox" defaultChecked />,
       innerText: () => <p innerText={'hi <b>\nthere'} />,
     };
-    for (const [name, view] of Object.entries(same)) assert.equal(await $html(view), await inBrowser(t, {}, view), name);
+    for (const [name, view] of Object.entries(same)) assert.equal(known(await $html(view)), await inBrowser(t, {}, view), name);
     // Where happy-dom lacks the property (it writes an attribute instead), the
     // browser's markup: defaultSelected is the selected attribute, spellcheck
     // and draggable are "true" or "false", translate "yes" or "no", autocorrect

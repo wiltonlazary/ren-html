@@ -63,7 +63,7 @@ page's URL and writes the absolute URL.
 | --- | --- |
 | `id` | the root's id (`page`): its `data-ren-root`, storage keys and element ids |
 | `props`, `provide` | as `Root`'s: what the view reads with `$lookup(Props)`, contexts passed in |
-| `theme`, `styles` | as ren-dom's |
+| `theme`, `styles`, `behavior` | as ren-dom's (`behavior`: `'app'`, the default, or `'page'`, or `{ like, …switches }`; what the host element and the sheet write) |
 | `tag` | the host element's tag (`div`) |
 | `timeout` | milliseconds to wait for the tasks (10,000; 0 waits forever); past it `$html` rejects |
 
@@ -132,8 +132,8 @@ Its dependencies are ren-core and ren-dom (install rrx-core, ren-core,
 ren-canv and ren-dom first, in that order; happy-dom and parse5 are dev dependencies, for the parity test and the fuzz). Node
 22.15 or later. Tests: `npm test` runs `test/html.test.jsx` (parity with
 ren-dom in a browser document, form values and a select's value, style
-declarations, names and raw text, failures and time-outs, the theme) in
-both JSX passes, `test/select.test.jsx` (which options a select shows,
+declarations, names and raw text, failures and time-outs, the theme and the
+behavior) in both JSX passes, `test/select.test.jsx` (which options a select shows,
 against Chrome: `test/fixtures/select.json`, recorded by
 `scripts/select-oracle.mjs` under the Chrome lock, ren-dom's live select on
 happy-dom and the parse of ren-html's markup; ren-json reads the same

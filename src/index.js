@@ -21,6 +21,7 @@ export { Document, serialize } from './document.js';
  * @property {[any, any][]=} provide Contexts passed in, as `Root`'s `provide`.
  * @property {import('ren-core/host').Tokens=} theme Theme overrides, as ren-dom's.
  * @property {(boolean | string)=} styles The primitives' scoped stylesheet (true), none (false), or extra CSS, as ren-dom's.
+ * @property {import('ren-core/host').Behavior=} behavior As an application ('app', the default) or a page ('page'), or `like` one with switches of its own, as ren-dom's: what the host element and the sheet say of selection, the I-beam and the touch callout.
  * @property {string=} tag The host element's tag (`div`).
  * @property {number=} timeout Milliseconds to wait for tasks to settle (10,000; 0 waits forever).
  */
@@ -36,7 +37,7 @@ export async function $html(view, options = {}) {
   const root = Root({
     id: options.id ?? 'page',
     target: document.body,
-    renderer: $dom(/** @type {any} */ (document), { theme: options.theme, styles: options.styles }),
+    renderer: $dom(/** @type {any} */ (document), { theme: options.theme, styles: options.styles, behavior: options.behavior }),
     storage: null,
     locks: null,
     props: options.props,

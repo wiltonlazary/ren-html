@@ -66,6 +66,14 @@ const HANDLERS = () => (
 );
 
 /**
+ * ren-html's markup less the inline prefixed declarations happy-dom's CSSOM
+ * drops (a browser drops those it does not know; Safari knows all three),
+ * which an application root's host element and an Edit write.
+ * @param {string} html
+ */
+const known = html => html.replace(/ style="[^"]*"/g, style => style.replace(/ ?-webkit-(?:user-select|touch-callout|tap-highlight-color): [^;"]*;/g, ''));
+
+/**
  * The view's markup from ren-dom on happy-dom: the host element's HTML.
  * @param {import('node:test').TestContext} t @param {any} view
  */
@@ -113,7 +121,7 @@ describe('ren html security', () => {
     for (const view of LINKS)
       for (const url of SCRIPTED) {
         const html = await $html(() => view(url), { styles: false });
-        assert.equal(html, await inBrowser(t, () => view(url)), `ren-dom's markup: ${JSON.stringify(url)}`);
+        assert.equal(known(html), await inBrowser(t, () => view(url)), `ren-dom's markup: ${JSON.stringify(url)}`);
         inert(html);
         assert.ok(!/script:/i.test(html.replace(/[\t\n\r]/g, '')), html);
       }
@@ -121,7 +129,7 @@ describe('ren html security', () => {
     for (const url of ['https://example.com/', '/javascript:x', ' javascript:x', '&#106;avascript:alert(1)', 'java&#x09;script:alert(1)']) {
       const html = await $html(() => <a href={url}>x</a>, { styles: false });
       // A browser serializes a no-break space as &nbsp;, happy-dom as itself.
-      assert.equal(html.replace(/&nbsp;/g, '\u00a0'), await inBrowser(t, () => <a href={url}>x</a>));
+      assert.equal(known(html.replace(/&nbsp;/g, '\u00a0')), await inBrowser(t, () => <a href={url}>x</a>));
       assert.deepEqual(attributes(html).find(([tag]) => tag === 'a'), ['a', 'href', url], 'read back as the text given');
       inert(html);
     }
@@ -138,7 +146,7 @@ describe('ren html security', () => {
       </div>
     );
     const html = await $html(view, { styles: false });
-    assert.equal(html, await inBrowser(t, view));
+    assert.equal(known(html), await inBrowser(t, view));
     assert.ok(html.includes('<div><a>a</a><map><area></map><a href="https://example.com/q">b</a><iframe></iframe><iframe></iframe></div>'), html);
     inert(html);
   });
@@ -155,14 +163,14 @@ describe('ren html security', () => {
       </svg>
     );
     const html = await $html(view, { styles: false });
-    assert.equal(html, await inBrowser(t, view));
+    assert.equal(known(html), await inBrowser(t, view));
     assert.ok(html.includes('<svg><a href="#a"><animate attributeName="href"></animate><set attributeName="href"></set><set attributeName="href" to="#b"></set><text>x</text></a></svg>'), html);
     inert(html);
   });
 
   it('writes no on* string, any case, on an HTML, SVG or MathML element', async t => {
     const html = await $html(HANDLERS, { styles: false });
-    assert.equal(html, await inBrowser(t, HANDLERS));
+    assert.equal(known(html), await inBrowser(t, HANDLERS));
     assert.ok(html.includes('<div><p>a</p><img src="x.png"><p>b</p><body></body><svg><circle></circle><a><text>x</text></a></svg><math><mi>x</mi></math></div>'), html);
     inert(html);
     // A function handler is no markup.
