@@ -13,7 +13,7 @@
 // ren-html's markup comes from test/fixtures/select-markup.jsx.
 // Run it under the machine-wide Chrome lock and commit what it writes (the
 // second file is ren-json's copy):
-//   flock "$HOME/.cache/chrome-bench.lock" node --import ren-core/loader scripts/select-oracle.mjs test/fixtures/select.json ../../../ren-json/wtree/_repo_/test/fixtures/select.json
+//   flock -w 1800 "$HOME/.cache/chrome-bench.lock" node --import ren-core/loader scripts/select-oracle.mjs test/fixtures/select.json ../../../ren-json/wtree/_repo_/test/fixtures/select.json
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';

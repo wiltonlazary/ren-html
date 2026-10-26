@@ -13,7 +13,7 @@
 // Each case's names end with its number, so no two cases share a group in
 // the one page.
 // Run it under the machine-wide Chrome lock and commit what it writes:
-//   flock "$HOME/.cache/chrome-bench.lock" node --import ren-core/loader scripts/details-oracle.mjs test/fixtures/details.json
+//   flock -w 1800 "$HOME/.cache/chrome-bench.lock" node --import ren-core/loader scripts/details-oracle.mjs test/fixtures/details.json
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';

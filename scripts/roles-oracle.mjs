@@ -7,7 +7,7 @@
 // Accessibility.getPartialAXTree reads, null when the tree ignores it.
 // Run it from ren-html under the machine-wide Chrome lock, the views file
 // and the file to write as its arguments, and commit what it writes:
-//   flock "$HOME/.cache/chrome-bench.lock" node scripts/roles-oracle.mjs ../../../ren-json/wtree/_repo_/test/fixtures/roles-view.jsx ../../../ren-json/wtree/_repo_/test/fixtures/roles.json
+//   flock -w 1800 "$HOME/.cache/chrome-bench.lock" node scripts/roles-oracle.mjs ../../../ren-json/wtree/_repo_/test/fixtures/roles-view.jsx ../../../ren-json/wtree/_repo_/test/fixtures/roles.json
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, resolve } from 'node:path';
